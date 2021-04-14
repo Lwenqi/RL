@@ -16,6 +16,7 @@ import gym_duckietown
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
 
+
 # from experiments.utils import save_img
 
 parser = argparse.ArgumentParser()
@@ -86,17 +87,18 @@ def update(dt):
     if key_handler[key.DOWN]:
         action = np.array([-0.44, 0])
     if key_handler[key.LEFT]:
-        action = np.array([0.35, +1])
+        action = np.array([0.35, +0.7])
     if key_handler[key.RIGHT]:
-        action = np.array([0.35, -1])
+        action = np.array([0.35, -0.7])
     if key_handler[key.SPACE]:
         action = np.array([0, 0])
 
     # Speed boost
     if key_handler[key.LSHIFT]:
         action *= 1.5
-
+        
     obs, reward, done, info = env.step(action)
+
     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
 
     if key_handler[key.RETURN]:

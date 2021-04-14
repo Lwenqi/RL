@@ -4,16 +4,17 @@ import logging
 
 import os
 import numpy as np
-
+import pdb
 # Duckietown Specific
 from reinforcement.pytorch.ddpg import DDPG
 from utils.env import launch_env
 from utils.wrappers import NormalizeWrapper, ImgWrapper, \
-    DtRewardWrapper, ActionWrapper, ResizeWrapper
+    DtRewardWrapper, ActionWrapper, ResizeWrapper,SteeringToWheelVelWrapper
 
 
 def _enjoy():          
     # Launch the env with our helper function
+    #env = launch_env("MultiMap-v0")
     env = launch_env()
     print("Initialized environment")
 
@@ -23,27 +24,70 @@ def _enjoy():
     env = ImgWrapper(env) # to make the images from 160x120x3 into 3x160x120
     env = ActionWrapper(env)
     env = DtRewardWrapper(env)
+    env = SteeringToWheelVelWrapper(env)
     print("Initialized Wrappers")
 
     state_dim = env.observation_space.shape
     action_dim = env.action_space.shape[0]
-    max_action = float(env.action_space.high[0])
-
+    max_action = float(env.action_space.high[0])   
+    max_action = float(0.8) # vel and angel limit to 0.8.
     # Initialize policy
     policy = DDPG(state_dim, action_dim, max_action, net_type="cnn")
     policy.load(filename='ddpg', directory='reinforcement/pytorch/models/')
 
     obs = env.reset()
     done = False
-
+    actions = []
     while True:
         while not done:
             action = policy.predict(np.array(obs))
             # Perform action
+            print(action[0])
+            print(action[1])
+
+            #action_v_a = wheel2velangle(action)
+            #actions.append(action_v_a)
+
             obs, reward, done, _ = env.step(action)
+            print("reward is {}".format(reward))
             env.render()
         done = False
-        obs = env.reset()        
+        obs = env.reset()
+        #np.savetxt('./control_v_a.txt', actions, delimiter=',')
+
+
+
+def wheel2velangle (action):
+    gain=1.0
+    trim=0.0
+    radius=0.0318
+    k=27.0
+    limit=1.0
+    wheel_distance=0.102
+    baseline = wheel_distance
+
+    k_r_inv = (gain+trim)/k
+    k_l_inv = (gain+trim)/k
+
+    u_r = action[0]
+    u_l = action[1]
+
+    omega_r = u_r/k_r_inv
+    omega_l = u_l/k_l_inv
+
+    vel = (omega_r+omega_l)*radius/2
+    angle = (omega_r-omega_l)*radius/baseline
+
+    action_vel_angle =  np.array([vel, angle])
+
+    return action_vel_angle
+
 
 if __name__ == '__main__':
     _enjoy()
+
+
+
+
+
+       

@@ -12,7 +12,7 @@ class TensorflowModel:
         self._computation_graph = None
         self._optimization_op = None
 
-        self.tf_session = tf.InteractiveSession()
+        self.tf_session = tf.compat.v1.InteractiveSession()
 
         # restoring
         self.tf_checkpoint = None

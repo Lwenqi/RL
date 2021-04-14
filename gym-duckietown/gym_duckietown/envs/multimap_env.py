@@ -40,13 +40,14 @@ class MultiMapEnv(gym.Env):
         self.cur_reward_sum = 0
         self.cur_num_steps = 0
 
+
     def seed(self, seed):
         for env in self.env_list:
             env.seed(seed)
 
         # Seed the random number generator
         self.np_random, _ = gym.utils.seeding.np_random(seed)
-
+        
         return [seed]
 
     def reset(self):
@@ -54,6 +55,7 @@ class MultiMapEnv(gym.Env):
         self.cur_env_idx = (self.cur_env_idx + 1) % len(self.env_list)
 
         env = self.env_list[self.cur_env_idx]
+
         return env.reset()
 
     def step(self, action):

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Tuple
 import geometry
 
+
 @dataclass
 class DoneRewardInfo:
     done: bool
@@ -1228,6 +1229,7 @@ class Simulator(gym.Env):
         # Compute the robot's speed
         delta_pos = self.cur_pos - prev_pos
         self.speed = np.linalg.norm(delta_pos) / delta_time
+        #print(self.speed)
 
         # Update world objects
         for obj in self.objects:
@@ -1314,7 +1316,6 @@ class Simulator(gym.Env):
     def compute_reward(self, pos, angle, speed):
         # Compute the collision avoidance penalty
         col_penalty = self._proximity_penalty2(pos, angle)
-
         # Get the position relative to the right lane tangent
         try:
             lp = self.get_lane_pos2(pos, angle)
@@ -1323,45 +1324,64 @@ class Simulator(gym.Env):
         else:
 
             # Compute the reward
+            
             reward = (
                     +1.0 * speed * lp.dot_dir +
                     -10 * np.abs(lp.dist) +
                     +40 * col_penalty
             )
-
+            
+            #reward = speed*(lp.dot_dir-np.abs(lp.dist)) + 40 * col_penalty 
+        
+        #print("lp.dist is {}".format(np.abs(lp.dist)))
+        #print("reward composed of three part {},{},{}".format(1.0 * speed * lp.dot_dir, speed * np.abs(lp.dist),40 * col_penalty))
+        #print("Initial reward is {}".format(reward))
         dist_to_stop = 1000.0
         #print("number of objects = ", len(self.objects))
         for obj in self.objects:
             if obj.kind == "sign_stop":
+                
                 dist_to_stop = min(dist_to_stop, ((pos[0] - obj.pos[0]) ** 2 + (pos[2] - obj.pos[2]) ** 2) ** 0.5)
+                #print("stop sign in env, distance is {}".format(dist_to_stop))
 
-        if self.speed > 0.15 and dist_to_stop < 0.3:
-            reward = -100.0
+        if self.speed > 0.15 and dist_to_stop < 0.5:
+            #reward = -100.0
+            reward = reward - (self.speed - 0.15)*2
+            #print("reward minus {} due to stop sign".format((self.speed - 0.15)*2))
+
+        if self.speed <0.1 :
+            reward = reward - (0.1-self.speed)*10
+            #print("reward minus {} due to low speed".format((0.1-self.speed)*10))
+       
         return reward
 
     def step(self, action: np.ndarray):
+        #print("action in env step is {}".format(action))
         action = np.clip(action, -1, 1)
         # Actions could be a Python list
         action = np.array(action)
-        
         frame_skip = self.frame_skip
         if self.domain_rand:
             frame_skip = self.randomization_settings["frame_skip"]
         
         for _ in range(int(frame_skip)):
+
             self.update_physics(action)
 
         # Generate the current camera image
         obs = self.render_obs()
         misc = self.get_agent_info()
-
+        
         d = self._compute_done_reward()
         misc['Simulator']['msg'] = d.done_why
+
+        #print("reward will be in step {}".format(d.reward))
 
         return obs, d.reward, d.done, misc
 
     def _compute_done_reward(self) -> DoneRewardInfo:
         # If the agent is not in a valid pose (on drivable tiles)
+
         if not self._valid_pose(self.cur_pos, self.cur_angle):
             msg = 'Stopping the simulator because we are at an invalid pose.'
             logger.info(msg)
@@ -1378,8 +1398,21 @@ class Simulator(gym.Env):
         else:
             done = False
             reward = self.compute_reward(self.cur_pos, self.cur_angle, self.speed)
+            #print("reward will be in _compute_done_reward {}".format(reward))
             msg = ''
             done_code = 'in-progress'
+
+        if done == False:
+            lpp = self.get_lane_pos2(self.cur_pos, self.cur_angle)
+
+            if lpp.dot_dir<0 :
+                msg = 'Stopping the simulator because we are at wrong direction.'
+                logger.info(msg)
+                reward = REWARD_INVALID_POSE
+                done_code = 'invalid-direction'
+                done = True
+                print("wrong direction detected")
+
         return DoneRewardInfo(done=done, done_why=msg, reward=reward, done_code=done_code)
 
     def _render_img(self, width, height, multi_fbo, final_fbo, img_array, top_down=True):

@@ -10,7 +10,7 @@ from reinforcement.pytorch.ddpg import DDPG
 from reinforcement.pytorch.utils import seed, evaluate_policy, ReplayBuffer
 from utils.env import launch_env
 from utils.wrappers import NormalizeWrapper, ImgWrapper, \
-    DtRewardWrapper, ActionWrapper, ResizeWrapper
+    DtRewardWrapper, ActionWrapper, ResizeWrapper, SteeringToWheelVelWrapper
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -22,6 +22,7 @@ def _train(args):
         os.makedirs(args.model_dir)
         
     # Launch the env with our helper function
+    #env = launch_env("MultiMap-v0")
     env = launch_env()
     print("Initialized environment")
 
@@ -31,6 +32,7 @@ def _train(args):
     env = ImgWrapper(env) # to make the images from 160x120x3 into 3x160x120
     env = ActionWrapper(env)
     env = DtRewardWrapper(env)
+    env = SteeringToWheelVelWrapper(env)
     print("Initialized Wrappers")
     
     # Set seeds
@@ -39,7 +41,7 @@ def _train(args):
     state_dim = env.observation_space.shape
     action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])
-
+    max_action = float(0.8)
     # Initialize policy
     policy = DDPG(state_dim, action_dim, max_action, net_type="cnn")
     replay_buffer = ReplayBuffer(args.replay_buffer_max_size)
@@ -60,7 +62,7 @@ def _train(args):
     print("Starting training")
     while total_timesteps < args.max_timesteps:
         
-        print("timestep: {} | reward: {}".format(total_timesteps, reward))
+        #print("timestep: {} | reward: {}".format(total_timesteps, reward))
             
         if done:
             if total_timesteps != 0:
@@ -87,20 +89,35 @@ def _train(args):
             episode_num += 1
 
         # Select action randomly or according to policy
-        if total_timesteps < args.start_timesteps:
-            action = env.action_space.sample()
-        else:
-            action = policy.predict(np.array(obs))
-            if args.expl_noise != 0:
-                action = (action + np.random.normal(
-                    0,
-                    args.expl_noise,
-                    size=env.action_space.shape[0])
-                          ).clip(env.action_space.low, env.action_space.high)
+        action_validation_check = 0
+        while action_validation_check ==0 :
+            if total_timesteps < args.start_timesteps:
+                action = 0.8*env.action_space.sample()
+
+            else:
+                action = policy.predict(np.array(obs))
+                #print("selected action (by policy) is {}".format(action))
+                if args.expl_noise != 0:
+                    action = (action + np.random.normal(
+                        0,
+                        args.expl_noise,
+                        size=env.action_space.shape[0])
+                            ).clip(0.8*env.action_space.low, 0.8*env.action_space.high)
+                #print("selected action (by policy plus noise) is {}".format(action))
+        
+
+            if action[0]+0.051*action[1]<=1 and action[0]+0.051*action[1] >= -1 and action[0]-0.051*action[1]<=1 and action[0]-0.051*action[1] >= -1 :
+                action_validation_check=1
+            else:
+                action_validation_check=0
+                print("invalid v and a, resample {} {}".format(action[0],action[1]))
 
         # Perform action
+
         new_obs, reward, done, _ = env.step(action)
 
+        #if action[0] + action[1] <0.01:   #Penalise slow actions: helps the bot to figure out that going straight > turning in circles
+        #    reward = -10
         if episode_timesteps >= args.env_timesteps:
             done = True
 
@@ -125,9 +142,11 @@ if __name__ == '__main__':
     
     # DDPG Args
     parser.add_argument("--seed", default=0, type=int)  # Sets Gym, PyTorch and Numpy seeds
-    parser.add_argument("--start_timesteps", default=1e4, type=int)  # How many time steps purely random policy is run for
+    parser.add_argument("--start_timesteps", default=1e4+5e3, type=int)  # How many time steps purely random policy is run for
+    #parser.add_argument("--start_timesteps", default=0, type=int)    # contine training with previous policy
     parser.add_argument("--eval_freq", default=5e3, type=float)  # How often (time steps) we evaluate
-    parser.add_argument("--max_timesteps", default=1e6, type=float)  # Max time steps to run environment for
+    #parser.add_argument("--max_timesteps", default=1e6, type=float)  # Max time steps to run environment for
+    parser.add_argument("--max_timesteps", default=2e6, type=float)  # Max time steps to run environment for
     parser.add_argument("--save_models", action="store_true", default=True)  # Whether or not models are saved
     parser.add_argument("--expl_noise", default=0.1, type=float)  # Std of Gaussian exploration noise
     parser.add_argument("--batch_size", default=32, type=int)  # Batch size for both actor and critic
