@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--max_steps', type=int, default=2000, help='max_steps')
 
 # You should set them to different map name and seed accordingly
-parser.add_argument('--map-name', default='map5')
+parser.add_argument('--map-name', default='map1')
 parser.add_argument('--seed', type=int, default=11, help='random seed')
 args = parser.parse_args()
 

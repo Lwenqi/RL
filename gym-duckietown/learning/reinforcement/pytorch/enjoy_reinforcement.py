@@ -30,7 +30,11 @@ def _enjoy():
     state_dim = env.observation_space.shape
     action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])   
-    max_action = float(0.8) # vel and angel limit to 0.8.
+    max_action = float(0.75) # vel and angel limit to 0.8.
+    print("ddpg param")
+    print(state_dim)
+    print(action_dim)
+    print(max_action)
     # Initialize policy
     policy = DDPG(state_dim, action_dim, max_action, net_type="cnn")
     policy.load(filename='ddpg', directory='reinforcement/pytorch/models/')
@@ -53,7 +57,7 @@ def _enjoy():
             env.render()
         done = False
         obs = env.reset()
-        #np.savetxt('./control_v_a.txt', actions, delimiter=',')
+        np.savetxt('./control_v_a.txt', actions, delimiter=',')
 
 
 

@@ -717,6 +717,7 @@ class Simulator(gym.Env):
 
     def seed(self, seed=None):
         self.np_random, _ = seeding.np_random(seed)
+        print("seed is {}".format(self.np_random))
         return [seed]
 
     def _set_tile(self, i, j, tile):
@@ -1324,33 +1325,35 @@ class Simulator(gym.Env):
         else:
 
             # Compute the reward
-            
+            """
             reward = (
                     +1.0 * speed * lp.dot_dir +
                     -10 * np.abs(lp.dist) +
                     +40 * col_penalty
             )
-            
-            #reward = speed*(lp.dot_dir-np.abs(lp.dist)) + 40 * col_penalty 
-        
+            """
+        reward = speed*(lp.dot_dir-np.abs(lp.dist))-0.1 + 40 * col_penalty 
+        #reward = speed*(lp.dot_dir)-10*np.abs(lp.dist)-0.1 + 40 * col_penalty 
+        #print("lp.dot_dir is {}".format(lp.dot_dir))
         #print("lp.dist is {}".format(np.abs(lp.dist)))
         #print("reward composed of three part {},{},{}".format(1.0 * speed * lp.dot_dir, speed * np.abs(lp.dist),40 * col_penalty))
         #print("Initial reward is {}".format(reward))
         dist_to_stop = 1000.0
         #print("number of objects = ", len(self.objects))
+        """
         for obj in self.objects:
             if obj.kind == "sign_stop":
                 
                 dist_to_stop = min(dist_to_stop, ((pos[0] - obj.pos[0]) ** 2 + (pos[2] - obj.pos[2]) ** 2) ** 0.5)
                 #print("stop sign in env, distance is {}".format(dist_to_stop))
-
+        
         if self.speed > 0.15 and dist_to_stop < 0.5:
             #reward = -100.0
-            reward = reward - (self.speed - 0.15)*2
+            reward - (self.speed - 0.15)*2
             #print("reward minus {} due to stop sign".format((self.speed - 0.15)*2))
-
-        if self.speed <0.1 :
-            reward = reward - (0.1-self.speed)*10
+        """
+        #if self.speed <0.05 :
+            #reward = reward - (0.05-self.speed)*5
             #print("reward minus {} due to low speed".format((0.1-self.speed)*10))
        
         return reward
