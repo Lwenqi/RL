@@ -346,7 +346,7 @@ class Simulator(gym.Env):
         Reset the simulation at the start of a new episode
         This also randomizes many environment parameters (domain randomization)
         """
-
+        
         # Step count since episode start
         self.step_count = 0
         self.timestamp = 0.0
@@ -469,12 +469,12 @@ class Simulator(gym.Env):
 
         for _ in range(MAX_SPAWN_ATTEMPTS):
             i, j = tile['coords']
-
+            #print("i and j is {},{}".format(i,j))
             # Choose a random position on this tile
             x = self.np_random.uniform(i, i + 1) * self.road_tile_size
             z = self.np_random.uniform(j, j + 1) * self.road_tile_size
             propose_pos = np.array([x, 0, z])
-
+            
             # Choose a random direction
             propose_angle = self.np_random.uniform(0, 2 * math.pi)
 
@@ -595,7 +595,7 @@ class Simulator(gym.Env):
                 }
 
                 self._set_tile(i, j, tile)
-
+                
                 if drivable:
                     tile['curves'] = self._get_curve(i, j)
                     self.drivable_tiles.append(tile)
@@ -717,7 +717,7 @@ class Simulator(gym.Env):
 
     def seed(self, seed=None):
         self.np_random, _ = seeding.np_random(seed)
-        print("seed is {}".format(self.np_random))
+        #print("seed is {}".format(self.np_random))
         return [seed]
 
     def _set_tile(self, i, j, tile):
@@ -1317,6 +1317,7 @@ class Simulator(gym.Env):
     def compute_reward(self, pos, angle, speed):
         # Compute the collision avoidance penalty
         col_penalty = self._proximity_penalty2(pos, angle)
+        #print("pos and angle of robot is {} and {}".format(pos,angle))
         # Get the position relative to the right lane tangent
         try:
             lp = self.get_lane_pos2(pos, angle)

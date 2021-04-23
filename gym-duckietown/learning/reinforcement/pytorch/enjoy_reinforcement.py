@@ -42,13 +42,16 @@ def _enjoy():
     obs = env.reset()
     done = False
     actions = []
-    while True:
+    T = True
+
+    while T == True:
         while not done:
             action = policy.predict(np.array(obs))
             # Perform action
             print(action[0])
             print(action[1])
-
+            action[0]=0
+            action[1]=0
             #action_v_a = wheel2velangle(action)
             #actions.append(action_v_a)
 
@@ -58,6 +61,7 @@ def _enjoy():
         done = False
         obs = env.reset()
         np.savetxt('./control_v_a.txt', actions, delimiter=',')
+        T = False
 
 
 

@@ -10,7 +10,7 @@ parser.add_argument('--max_steps', type=int, default=2000, help='max_steps')
 
 # You should set them to different map name and seed accordingly
 parser.add_argument('--map-name', default='map1')
-parser.add_argument('--seed', type=int, default=11, help='random seed')
+parser.add_argument('--seed', type=int, default=2, help='random seed')
 args = parser.parse_args()
 
 env = DuckietownEnv(
@@ -27,7 +27,7 @@ env.render()
 total_reward = 0
 
 # please remove this line for your own policy
-actions = np.loadtxt('./map5_seed11.txt', delimiter=',')
+actions = np.loadtxt('./map1_seed2.txt', delimiter=',')
 
 for (speed, steering) in actions:
 
