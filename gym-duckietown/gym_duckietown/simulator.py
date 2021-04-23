@@ -109,6 +109,9 @@ MAX_SPAWN_ATTEMPTS = 5000
 
 LanePosition0 = namedtuple('LanePosition', 'dist dot_dir angle_deg angle_rad')
 
+IHV = 1
+
+Action_global = []
 
 class LanePosition(LanePosition0):
 
@@ -1364,6 +1367,27 @@ class Simulator(gym.Env):
         action = np.clip(action, -1, 1)
         # Actions could be a Python list
         action = np.array(action)
+        global IHV
+        global Action_global
+
+        if IHV == 1:
+            initial_check = self.get_lane_pos2(self.cur_pos, self.cur_angle)
+            print("angle deg is {}".format(initial_check.angle_deg))
+            if initial_check.angle_deg<=4 and initial_check.angle_deg>=-4:
+                IHV=0
+            else:
+                if initial_check.angle_deg<-4:
+                    action[0]=0
+                    action[1]=-0.15
+                else:
+                    action[0]=0
+                    action[1]=0.15
+
+            
+
+        Action_global = action
+
+
         frame_skip = self.frame_skip
         if self.domain_rand:
             frame_skip = self.randomization_settings["frame_skip"]
@@ -1382,6 +1406,12 @@ class Simulator(gym.Env):
         #print("reward will be in step {}".format(d.reward))
 
         return obs, d.reward, d.done, misc
+
+    def update_action(self):
+        global Action_global
+
+
+        return Action_global
 
     def _compute_done_reward(self) -> DoneRewardInfo:
         # If the agent is not in a valid pose (on drivable tiles)

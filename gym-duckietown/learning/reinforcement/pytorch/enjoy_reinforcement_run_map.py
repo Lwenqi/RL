@@ -30,7 +30,7 @@ def _enjoy():
     state_dim = env.observation_space.shape
     action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])   
-    max_action = float(0.75) # vel and angel limit to 0.8.
+    max_action = float(0.55) # vel and angel limit to 0.8.
     print("ddpg param")
     print(state_dim)
     print(action_dim)
@@ -47,17 +47,20 @@ def _enjoy():
     while T == True:
         while not done:
             action = policy.predict(np.array(obs))
+            action_after = np.array(action)
             # Perform action
             #action[0]=0
             #action[1]=0
-            actions.append(action)
+            #actions.append(action)
 
             obs, reward, done, _ = env.step(action)
+            action_after = env.update_action()
+            actions.append(action_after)
             #print("reward is {}".format(reward))
             env.render()
         done = False
         obs = env.reset()
-        np.savetxt('./control_v_a_map2_seed16.txt', actions, delimiter=',')
+        np.savetxt('./control_v_a_map2_seed3.txt', actions, delimiter=',')
         T = False
 
 
