@@ -1332,7 +1332,7 @@ class Simulator(gym.Env):
                     +40 * col_penalty
             )
             """
-        reward = speed*(lp.dot_dir-np.abs(lp.dist))-0.1 + 40 * col_penalty 
+        reward = speed*(lp.dot_dir)-5*np.abs(lp.dist)-0.1 + 40 * col_penalty 
         #reward = speed*(lp.dot_dir)-10*np.abs(lp.dist)-0.1 + 40 * col_penalty 
         #print("lp.dot_dir is {}".format(lp.dot_dir))
         #print("lp.dist is {}".format(np.abs(lp.dist)))
