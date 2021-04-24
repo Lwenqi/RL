@@ -1372,16 +1372,17 @@ class Simulator(gym.Env):
 
         if IHV == 1:
             initial_check = self.get_lane_pos2(self.cur_pos, self.cur_angle)
-            print("angle deg is {}".format(initial_check.angle_deg))
+            #print("angle deg is {}".format(initial_check.angle_deg))
             if initial_check.angle_deg<=4 and initial_check.angle_deg>=-4:
-                IHV=0
+                IHV=1  
+                #IHV=0
             else:
                 if initial_check.angle_deg<-4:
                     action[0]=0
-                    action[1]=-0.15
+                    action[1]=-0.20
                 else:
                     action[0]=0
-                    action[1]=0.15
+                    action[1]=0.20
 
             
 

@@ -60,7 +60,7 @@ def _enjoy():
             env.render()
         done = False
         obs = env.reset()
-        np.savetxt('./control_v_a_map2_seed3.txt', actions, delimiter=',')
+        np.savetxt('./control_v_a_map2_seed8.txt', actions, delimiter=',')
         T = False
 
 

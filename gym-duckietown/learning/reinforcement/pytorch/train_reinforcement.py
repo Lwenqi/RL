@@ -115,7 +115,7 @@ def _train(args):
         # Perform action
 
         new_obs, reward, done, _ = env.step(action)
-
+        action = env.update_action()
         #if action[0] + action[1] <0.01:   #Penalise slow actions: helps the bot to figure out that going straight > turning in circles
         #    reward = -10
         if episode_timesteps >= args.env_timesteps:
